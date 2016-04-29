@@ -11,7 +11,6 @@ class Widget(QWidget):
         self.widget = QWidget()
         #Layout of Container Widget
         self.layout = QGridLayout(self)
-	#self.showImages("./result/")
 	self.widget.setLayout(self.layout)
     
         
@@ -33,7 +32,6 @@ class Widget(QWidget):
 	j=0
 	i=0
 	for element in os.listdir(directory):
-		print element
 		size=400
 		icon=QIcon()
 		mode=QIcon.Normal
