@@ -20,6 +20,7 @@ class Image_zebra:
 		self.hist = cv2.calcHist([self.img],[0],None,[256],[0,256])
 		self.treshold_value = triangle(self.hist)
 		self.contour = None
+		self.ellipse = None
 		self.hull = None
 		self.area = None
 		self.len_head_tail = None
@@ -40,16 +41,17 @@ class Image_zebra:
 		# select the contour of the biggest binary object
 		contour,hierarchy = cv2.findContours(self.img,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
 		self.contour = contour[find_bigest(contour,hierarchy)]
-
+		self.ellipse = cv2.fitEllipse(self.contour)
+		self.area = cv2.contourArea(self.contour)
 		# compute the convex hull
 		self.hull = cv2.convexHull(self.contour)
 
-		self.cop = draw_line(self.hull,self.cop)
+		self.cop = draw_backContour(self.hull,self.cop,self.ellipse)
 
 		# save analyse's results
 		self.write_mesures(self.courbure,self.name)
 		#cv2.imshow(self.name,self.cop)
-		cv2.imwrite("../Analyze_results/Images"+self.name+".jpg",self.cop)
+		#cv2.imwrite("../Analyze_results/Images"+self.name+".jpg",self.cop)
 
 
 
