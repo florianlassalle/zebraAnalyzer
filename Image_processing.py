@@ -53,6 +53,7 @@ class Image_zebra:
 		# save analyse's results
 		self.write_mesures(self.courbure,self.name,self.area)
 		#cv2.imshow(self.name,self.cop)
+		cv2.putText(self.cop,self.name,(10,self.cop.shape[0]-10), cv2.FONT_HERSHEY_SIMPLEX, 2,(255,255,255),2,cv2.CV_AA)
 		cv2.imwrite(str("../Analyze_results/Images/"+self.name+".jpg"),self.cop)
 
 
