@@ -204,7 +204,7 @@ def draw_longFish(contour,hull,top,bot,img):
 			bot_contour = j
 
 	# on fait des tests pour pouvoir dessiner les 2 contours dans le bon sens
-	
+	"""
 	if top_contour > bot_contour and top > bot:
 		poubelle,imga = drawing(contour,bot_contour,top_contour,1,1000000,img1)
 		longueurb,imga = drawing(hull,bot,top,1,1000000,img1)
@@ -213,16 +213,19 @@ def draw_longFish(contour,hull,top,bot,img):
 		invert_top = top - len(hull)
 		poubelle,imgb = drawing(contour,bot_contour,invert_top_contour ,-1,1000000,img2)
 		longueurb,imgb = drawing(hull,bot,invert_top,-1,1000000,img2)
-	
+	"""
 	if top_contour > bot_contour and top < bot:
-		poubelle,imga = drawing(contour,bot_contour,top_contour,1,1000000,img1)
-		longueurb,imga = drawing(hull,top,bot,1,1000000,img1)
+		# Ici je me suis rendu compte qu'on tracait l'enveloppe dans un sens et le contour dans l'autre, donc j'ai inverse les lignes
+		# pour dessiner du meme cote
+		invert_bot = bot - len(hull)
+		poubelle,imgb = drawing(contour,bot_contour,top_contour,1,1000000,img1)
+		longueurb,imgb = drawing(hull,top,invert_bot,-1,1000000,img1)
 		#inversion des point pour dessiner de l'autre cote du poisson
 		invert_top_contour = top_contour - len(contour)
-		invert_top = top - len(hull)
-		poubelle,imgb = drawing(contour,bot_contour,invert_top_contour ,-1,1000000,img2)
-		longueurb,imgb = drawing(hull,bot,invert_top,-1,1000000,img2)
-	
+		poubelle,imga = drawing(contour,bot_contour,invert_top_contour ,-1,1000000,img2)
+		longueurb,imga = drawing(hull,top,bot,1,1000000,img2)
+		
+	"""
 	if bot_contour > top_contour and top > bot:
 		poubelle,imga = drawing(contour,top_contour,bot_contour,1,1000000,img1)
 		longueurb,imga = drawing(hull,bot,top,1,1000000,img1)
@@ -231,7 +234,7 @@ def draw_longFish(contour,hull,top,bot,img):
 		invert_bot = bot - len(hull)
 		poubelle,imgb = drawing(contour,top_contour,invert_bot_contour ,-1,1000000,img2)
 		longueurb,imgb = drawing(hull,top,invert_bot,-1,1000000,img2)
-	
+	"""
 	if  top_contour < bot_contour and top < bot:
 		poubelle,imga = drawing(contour,top_contour,bot_contour,1,1000000,img1)
 		longueura,imga = drawing(hull,top,bot,1,1000000,img1)
@@ -251,14 +254,17 @@ def draw_longFish(contour,hull,top,bot,img):
 	img_contourb = imgb.copy()
 	contour,hierarchy = cv2.findContours(img_contourb,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
 	areaB = cv2.contourArea(contour[0])
-
 	#enfin on trace le contour voulu sur la photo
-	if areaA > areaB :
+	if areaA < areaB :
 		longueur,img = drawing(hull,top,bot,1,1000000,img)
+		
 	
 	else :
-		longueur,img = drawing(hull,top,bot,1,1000000,img)
-	
+		invert_bot = bot - len(hull)
+		longueur,img = drawing(hull,top,invert_bot,-1,1000000,img)
+		
+	cv2.waitKey(0)
+	cv2.destroyAllWindows()
 	
 	# on calcule la distance entre les deux points opposes pour obtenir la distance "a vol d'oiseau" 
 
@@ -297,10 +303,10 @@ def draw_backContour(hull,img,ellipse,contour):
 	if ovality < 0.5:
 		pt1,pt2 = find_longest(hull)
 		img_out,courbure = draw_longFish(contour,hull,pt1,pt2,img)
-		#img_out = detect_yolk(img_out,img, 250, 100)
+		img_out = detect_yolk(img_out,img, 250, 100)
 	else :
 		img_out,courbure,pt1,pt2 = draw_roundFish(hull,img)
-		#img_out = detect_yolk(img_out,img,400,60)
+		img_out = detect_yolk(img_out,img,400,60)
 	return img_out, courbure,pt1,pt2
 
 def calc_ellipse(ellipse):
@@ -322,7 +328,8 @@ def detect_yolk(img,img_out, par1, par2):
 	--param2 plus le seuil est grand plus les cercles sont dectetes 
 
 	"""
-	cimg = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+	cimg = cv2.medianBlur(img,5)
+	cimg = cv2.cvtColor(cimg, cv2.COLOR_BGR2GRAY)
 
 	circles = cv2.HoughCircles(cimg,cv2.cv.CV_HOUGH_GRADIENT,1,par1,param1=par2,param2=30,minRadius=5,maxRadius=1000)
 
