@@ -190,9 +190,9 @@ def draw_longFish(contour,hull,top,bot,img):
 	entre top et bot ainsi que le contour entre top et bot egalement.
 	Puis on analyse cette image et on calcule l'aire du dessin qu'on vient de faire 
 	"""
-	img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-	img1 = np.zeros(img.shape, np.uint8)
-	img2 = np.zeros(img.shape, np.uint8)
+	img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+	img1 = np.zeros(img_gray.shape, np.uint8)
+	img2 = np.zeros(img_gray.shape, np.uint8)
 
 	# Il faut retrouver quels points de contour ont les memes coordonnees que top et bot
 	for i in range(len(contour)):
@@ -254,9 +254,6 @@ def draw_longFish(contour,hull,top,bot,img):
 
 	#enfin on trace le contour voulu sur la photo
 	if areaA > areaB :
-		print "hull", len(hull)
-		print "top", top
-		print "bot", bot
 		longueur,img = drawing(hull,top,bot,1,1000000,img)
 	else :
 		longueur,img = drawing(hull,top,bot,1,1000000,img)
@@ -265,7 +262,6 @@ def draw_longFish(contour,hull,top,bot,img):
 
 	maxi = calcul_distance(hull,bot,top)
 	rapport = calcul_rapport(longueur,maxi)
-	cv2.imshow("image",img)
 	return img,rapport
 
 def drawing(points,pt1,pt2,pas,maxi,img):
@@ -291,11 +287,70 @@ def draw_backContour(hull,img,ellipse,contour):
 	ovality = calc_ellipse(ellipse)
 	if ovality < 0.5:
 		pt1,pt2 = find_longest(hull)
-		img_out,rapport = draw_longFish(contour,hull,pt1,pt2,img)
+		img_out,courbure = draw_longFish(contour,hull,pt1,pt2,img)
+		#img_out = detect_yolk(img_out,img, 250, 100)
 	else :
-		img_out,rapport = draw_roundFish(hull,img)
-	return img_out, rapport
+		img_out,courbure = draw_roundFish(hull,img)
+		#img_out = detect_yolk(img_out,img,400,60)
+	return img_out, courbure
 
 def calc_ellipse(ellipse):
 	rapport = ellipse[1][0]/ellipse[1][1]
 	return rapport
+
+def detect_yolk(img,img_out, par1, par2):
+
+	"""
+	details parametres de la fonction houghcircles :
+	-- cv2.cv.CV_HOUGH_GRADIENT : unique methode utilisee definit la methode pour detecter les cercles
+
+	-- dp : c'est le ratio inverse de la resolution accumulee dans limage si dp=1 la resolution est la meme que l'image en entree plus le dp est eleve plus lobtention de cercle est importante
+
+	--mindist: distance min entre le centre des cercles detecte plus il est petit plus de cercles sont detectes si trop grand alors certains milieux ne peuvent pas etre detectes
+
+	--param1 gere la detection de bord
+
+	--param2 plus le seuil est grand plus les cercles sont dectetes 
+
+	"""
+	cimg = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+	circles = cv2.HoughCircles(cimg,cv2.cv.CV_HOUGH_GRADIENT,1,par1,param1=par2,param2=30,minRadius=5,maxRadius=1000)
+
+
+	"""
+	parametre detection de loeil:
+
+	(img,cv2.cv.CV_HOUGH_GRADIENT,1,40,param1=50,param2=30,minRadius=10,maxRadius=55)
+
+	exception
+	z05/z10 : (img,cv2.cv.CV_HOUGH_GRADIENT,2,500,param1=50,param2=30,minRadius=10,maxRadius=55)
+
+	fonctionne pas:
+	z07 (img,cv2.cv.CV_HOUGH_GRADIENT,2,300,param1=20,param2=98,minRadius=5,maxRadius=60)
+	z08a
+
+	"""
+
+	"""
+	parametre detection du yolk:
+
+	#parametre pour les poissons long img,cv2.cv.CV_HOUGH_GRADIENT,1,250,param1=100,param2=30,minRadius=5,maxRadius=1000)
+
+	#parmetre pour les poissons rond  img,cv2.cv.CV_HOUGH_GRADIENT,1,400,param1=60,param2=30,minRadius=5,maxRadius=1000)
+
+	#exception lorsque le bout du yolk est trop marque 
+	(img,cv2.cv.CV_HOUGH_GRADIENT,100,600,param1=100,param2=30,minRadius=5,maxRadius=1000)
+	"""
+
+
+	circles = np.uint16(np.around(circles))
+
+
+	for i in circles[0,:]:
+		cv2.circle(img_out,(i[0],i[1]),i[2],(127, 255, 212),1)  # dessine le cercle
+		cv2.circle(img_out,(i[0],i[1]),2,(0,0,255),3)     # dessine le centre du cercle
+
+	return img_out
+
+

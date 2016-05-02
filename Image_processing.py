@@ -26,11 +26,13 @@ class Image_zebra:
 		self.len_head_tail = None
 		self.courbure = None
 		
-	def write_mesures(self,donnee,nom):
+	def write_mesures(self,courbure,nom,area):
 		fic = open ('../Analyze_results/resultTable.csv', "a")
 		fic.write(nom)
 		fic.write(',')
-		fic.write(str(donnee))
+		fic.write(str(courbure))
+		fic.write(',')
+		fic.write(str(area))
 		fic.write ('\n')
 
 	def process(self):
@@ -39,19 +41,19 @@ class Image_zebra:
 		self.img = fill_holes(self.img)
 
 		# select the contour of the biggest binary object
-		contour,hierarchy = cv2.findContours(self.img,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+		contour,hierarchy = cv2.findContours(self.img.copy(),cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
 		self.contour = contour[find_bigest(contour,hierarchy)]
 		self.ellipse = cv2.fitEllipse(self.contour)
 		self.area = cv2.contourArea(self.contour)
 		# compute the convex hull
 		self.hull = cv2.convexHull(self.contour)
 
-		self.cop = draw_backContour(self.hull,self.cop,self.ellipse)
-
+		self.cop, self.courbure = draw_backContour(self.hull,self.cop,self.ellipse,self.contour)
+		#cv2.imshow("img",self.img)
 		# save analyse's results
-		self.write_mesures(self.courbure,self.name)
+		self.write_mesures(self.courbure,self.name,self.area)
 		#cv2.imshow(self.name,self.cop)
-		#cv2.imwrite("../Analyze_results/Images"+self.name+".jpg",self.cop)
+		cv2.imwrite(str("../Analyze_results/Images/"+self.name+".jpg"),self.cop)
 
 
 
@@ -60,6 +62,7 @@ def create_result_file():
 	fic.write('image_name')
 	fic.write(',')
 	fic.write('dorsal_circularity')
+	fic.write('fish_area')
 	fic.write('\n')
 	
 

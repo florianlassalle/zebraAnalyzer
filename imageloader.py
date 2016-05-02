@@ -9,7 +9,7 @@ import widget as wg
 class ImageViewer(QMainWindow):
     def __init__(self):
         super(ImageViewer, self).__init__()
-	self.resultDir = "../Analyze_results/"
+	self.resultDir = "../Analyze_results/Images/"
 	self.w = wg.Widget()
         self.setCentralWidget(self.w)	
         self.createActions()
