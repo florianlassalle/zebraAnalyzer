@@ -117,31 +117,30 @@ def fill_holes(img):
 		return img
 		
 def draw_roundFish(points,img):
-		# on commence par calculer la plus grande distance entre deux points successifs et on considerera que ce sont les points de la tete et de la queue.
+	"""
+	on commence par calculer la plus grande distance entre deux points successifs et on considerera que ce sont les points de la tete et de la queue.
+	puis on dessine une ligne entre chaque points pour dessiner le dos du poisson
+	On dessine egalement un trait entre le premier et le dernier point de la liste.
+	"""
 	maxi = 0
 	for i in range(len(points)-1):
 		distance = calcul_distance(points,i,i+1)
 		
 		if distance > maxi :
 			maxi = distance
+			top = i
+			bot = i+1
 
-	# dessine une ligne entre deux opints
-	#on calcule d'abord la distance entre deux points successifs, et si elle est inferieure a la distance max entre 2 points successifs on trace la ligne
-	longueur = 0
-	for i in range(len(points)-1):
-		dst = calcul_distance(points,i,i+1)
-		if dst < maxi :  # = racine carree ((xa-xb) + (ya-yb))
-			cv2.line(img,(points[i][0][0],points[i][0][1]),(points[i+1][0][0],points[i+1][0][1]),(255,0,0),1)
-			longueur += dst
+	longueur, img = drawing(points,0,len(points)-1,1,maxi,img)
 
-	distance = calcul_distance(points,0,-1)
+	dst = calcul_distance(points,0,-1)
 	if dst < maxi:
 		cv2.line(img,(points[0][0][0],points[0][0][1]),(points[-1][0][0],points[-1][0][1]),(255,0,0),1)
 		longueur += dst
-
+	
 	rapport = calcul_rapport(longueur,maxi)
 
-	return img,rapport
+	return img,rapport,top,bot
 
 def find_bigest(contour,hierarchy):
 		"""
@@ -202,10 +201,10 @@ def draw_longFish(contour,hull,top,bot,img):
 
 	for j in range(len(contour)):
 		if contour[j][0][0] == hull[bot][0][0] and contour[j][0][1] == hull[bot][0][1]:
-			print j
 			bot_contour = j
 
 	# on fait des tests pour pouvoir dessiner les 2 contours dans le bon sens
+	
 	if top_contour > bot_contour and top > bot:
 		poubelle,imga = drawing(contour,bot_contour,top_contour,1,1000000,img1)
 		longueurb,imga = drawing(hull,bot,top,1,1000000,img1)
@@ -214,7 +213,7 @@ def draw_longFish(contour,hull,top,bot,img):
 		invert_top = top - len(hull)
 		poubelle,imgb = drawing(contour,bot_contour,invert_top_contour ,-1,1000000,img2)
 		longueurb,imgb = drawing(hull,bot,invert_top,-1,1000000,img2)
-
+	
 	if top_contour > bot_contour and top < bot:
 		poubelle,imga = drawing(contour,bot_contour,top_contour,1,1000000,img1)
 		longueurb,imga = drawing(hull,top,bot,1,1000000,img1)
@@ -223,8 +222,7 @@ def draw_longFish(contour,hull,top,bot,img):
 		invert_top = top - len(hull)
 		poubelle,imgb = drawing(contour,bot_contour,invert_top_contour ,-1,1000000,img2)
 		longueurb,imgb = drawing(hull,bot,invert_top,-1,1000000,img2)
-
-
+	
 	if bot_contour > top_contour and top > bot:
 		poubelle,imga = drawing(contour,top_contour,bot_contour,1,1000000,img1)
 		longueurb,imga = drawing(hull,bot,top,1,1000000,img1)
@@ -233,16 +231,18 @@ def draw_longFish(contour,hull,top,bot,img):
 		invert_bot = bot - len(hull)
 		poubelle,imgb = drawing(contour,top_contour,invert_bot_contour ,-1,1000000,img2)
 		longueurb,imgb = drawing(hull,top,invert_bot,-1,1000000,img2)
-
-	if bot_contour > top_contour and top < bot:
+	
+	if  top_contour < bot_contour and top < bot:
 		poubelle,imga = drawing(contour,top_contour,bot_contour,1,1000000,img1)
 		longueura,imga = drawing(hull,top,bot,1,1000000,img1)
+	
 		#inversion des point pour dessiner de l'autre cote du poisson
 		invert_bot_contour = bot_contour - len(contour)
 		invert_bot = bot - len(hull)
 		poubelle,imgb = drawing(contour,top_contour,invert_bot_contour ,-1,1000000,img2)
 		longueurb,imgb = drawing(hull,top,invert_bot,-1,1000000,img2)
-
+	
+	
 	# puis on calcule les aires des dessins obtenus pour les comparer
 	img_contoura = imga.copy()
 	contour,hierarchy = cv2.findContours(img_contoura,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
@@ -255,8 +255,10 @@ def draw_longFish(contour,hull,top,bot,img):
 	#enfin on trace le contour voulu sur la photo
 	if areaA > areaB :
 		longueur,img = drawing(hull,top,bot,1,1000000,img)
+	
 	else :
 		longueur,img = drawing(hull,top,bot,1,1000000,img)
+	
 	
 	# on calcule la distance entre les deux points opposes pour obtenir la distance "a vol d'oiseau" 
 
@@ -266,7 +268,8 @@ def draw_longFish(contour,hull,top,bot,img):
 
 def drawing(points,pt1,pt2,pas,maxi,img):
 	"""
-	dessine l'enveloppe entre le point pt1 et pt2, et si on rencontre maxi = le ventre, on s'arrete
+	Ici, on dessine sur une image une ligne droite entre chaque points de "points" compris entre
+	pt1 et pt2
 	"""
 	longueur = 0
 	i = pt1
@@ -276,13 +279,19 @@ def drawing(points,pt1,pt2,pas,maxi,img):
 		if dst < maxi : 
 			cv2.line(img,(points[i][0][0],points[i][0][1]),(points[i+1][0][0],points[i+1][0][1]),(255,0,0),1)
 			longueur += dst
-		else:
-			return 0,None
+		#else:
+		#	return 0,None
 
 		i += pas		
 	return longueur,img
 
 def draw_backContour(hull,img,ellipse,contour):
+	"""
+	Fonction qui permet de decider si on a un poisson de type long ou rond.
+	Cela se fait en calculant le rapport de la largeur sur la longueur de l'ellipse
+	obtenue avec fitEllipse.
+	elle va ensuite lancer en fonction, soit la fonction draw_longFish, soit draw_roundfsh.
+	"""
 
 	ovality = calc_ellipse(ellipse)
 	if ovality < 0.5:
@@ -290,9 +299,9 @@ def draw_backContour(hull,img,ellipse,contour):
 		img_out,courbure = draw_longFish(contour,hull,pt1,pt2,img)
 		#img_out = detect_yolk(img_out,img, 250, 100)
 	else :
-		img_out,courbure = draw_roundFish(hull,img)
+		img_out,courbure,pt1,pt2 = draw_roundFish(hull,img)
 		#img_out = detect_yolk(img_out,img,400,60)
-	return img_out, courbure
+	return img_out, courbure,pt1,pt2
 
 def calc_ellipse(ellipse):
 	rapport = ellipse[1][0]/ellipse[1][1]
