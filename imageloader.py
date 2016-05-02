@@ -9,7 +9,7 @@ import widget as wg
 class ImageViewer(QMainWindow):
     def __init__(self):
         super(ImageViewer, self).__init__()
-	self.resultDir = "../result/"
+	self.resultDir = "../Analyze_results/Images/"
 	self.w = wg.Widget()
         self.setCentralWidget(self.w)	
         self.createActions()
@@ -24,7 +24,7 @@ class ImageViewer(QMainWindow):
 		
     def analyze(self):
 		if self.directory:
-			imp.main(str(self.directory))
+			imp.process_all_images(str(self.directory))
 			self.w.showImages(self.resultDir)
 		else:
 			print "pas de répertoire sélectionné"
