@@ -7,7 +7,7 @@ def gaussianBlur(img):
 		impair values required for radius """
 		return cv2.GaussianBlur(img,(5,5),9)
 	
-def treshold(img,tresh):
+def threshold(img,tresh):
 		ret,img = cv2.threshold(img,tresh,255,cv2.THRESH_BINARY)
 		return img
 		
@@ -178,6 +178,10 @@ def calcul_rapport(longueur,maxi):
 	return maxi/longueur
 
 def calcul_distance(points,xa,xb):
+	"""
+	Calcul de la distance entre deux points dans un repere orthonorme :
+	racine((Xa-Xb)aucarre + (Ya-Yb)aucarre)
+	"""
 	dstx = points[xa][0][0] - points[xb][0][0] # = Xa - Xb
 	dsty = points[xa][0][1] - points[xb][0][1] # = Ya - Yb
 	distance = sqrt(pow(dstx,2) + pow(dsty,2))
@@ -186,8 +190,10 @@ def calcul_distance(points,xa,xb):
 def draw_longFish(contour,hull,top,bot,img):
 	"""
 	on creer une nouvelle image noire de la meme taille que la photo, puis on trace l'envellope convexe
-	entre top et bot ainsi que le contour entre top et bot egalement.
-	Puis on analyse cette image et on calcule l'aire du dessin qu'on vient de faire 
+	entre top et bot ainsi que le contour entre top et bot egalement, on realise ce dessin pour un cote du poisson sur une image noire, et pour
+	l'autre cote du poisson sur une autre image.
+	Ensuite on analyse cette image et on calcule l'aire du dessin qu'on vient de faire, l'aire la plus grande est celle qui est du cote du yolk
+	du poisson, donc celle qu'on ne veut pas. 
 	"""
 	img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 	img1 = np.zeros(img_gray.shape, np.uint8)
@@ -204,16 +210,7 @@ def draw_longFish(contour,hull,top,bot,img):
 			bot_contour = j
 
 	# on fait des tests pour pouvoir dessiner les 2 contours dans le bon sens
-	"""
-	if top_contour > bot_contour and top > bot:
-		poubelle,imga = drawing(contour,bot_contour,top_contour,1,1000000,img1)
-		longueurb,imga = drawing(hull,bot,top,1,1000000,img1)
-		#inversion des point pour dessiner de l'autre cote du poisson
-		invert_top_contour = top_contour - len(contour)
-		invert_top = top - len(hull)
-		poubelle,imgb = drawing(contour,bot_contour,invert_top_contour ,-1,1000000,img2)
-		longueurb,imgb = drawing(hull,bot,invert_top,-1,1000000,img2)
-	"""
+	
 	if top_contour > bot_contour and top < bot:
 		# Ici je me suis rendu compte qu'on tracait l'enveloppe dans un sens et le contour dans l'autre, donc j'ai inverse les lignes
 		# pour dessiner du meme cote
@@ -224,17 +221,7 @@ def draw_longFish(contour,hull,top,bot,img):
 		invert_top_contour = top_contour - len(contour)
 		poubelle,imga = drawing(contour,bot_contour,invert_top_contour ,-1,1000000,img2)
 		longueurb,imga = drawing(hull,top,bot,1,1000000,img2)
-		
-	"""
-	if bot_contour > top_contour and top > bot:
-		poubelle,imga = drawing(contour,top_contour,bot_contour,1,1000000,img1)
-		longueurb,imga = drawing(hull,bot,top,1,1000000,img1)
-		#inversion des point pour dessiner de l'autre cote du poisson
-		invert_bot_contour = bot_contour - len(contour)
-		invert_bot = bot - len(hull)
-		poubelle,imgb = drawing(contour,top_contour,invert_bot_contour ,-1,1000000,img2)
-		longueurb,imgb = drawing(hull,top,invert_bot,-1,1000000,img2)
-	"""
+
 	if  top_contour < bot_contour and top < bot:
 		poubelle,imga = drawing(contour,top_contour,bot_contour,1,1000000,img1)
 		longueura,imga = drawing(hull,top,bot,1,1000000,img1)
@@ -262,9 +249,6 @@ def draw_longFish(contour,hull,top,bot,img):
 	else :
 		invert_bot = bot - len(hull)
 		longueur,img = drawing(hull,top,invert_bot,-1,1000000,img)
-		
-	cv2.waitKey(0)
-	cv2.destroyAllWindows()
 	
 	# on calcule la distance entre les deux points opposes pour obtenir la distance "a vol d'oiseau" 
 
@@ -275,7 +259,7 @@ def draw_longFish(contour,hull,top,bot,img):
 def drawing(points,pt1,pt2,pas,maxi,img):
 	"""
 	Ici, on dessine sur une image une ligne droite entre chaque points de "points" compris entre
-	pt1 et pt2
+	pt1 et pt2, si la distance a dessiner est superieire ou egale a maxi, on ne dessine pas.
 	"""
 	longueur = 0
 	i = pt1
@@ -285,8 +269,6 @@ def drawing(points,pt1,pt2,pas,maxi,img):
 		if dst < maxi : 
 			cv2.line(img,(points[i][0][0],points[i][0][1]),(points[i+1][0][0],points[i+1][0][1]),(255,0,0),1)
 			longueur += dst
-		#else:
-		#	return 0,None
 
 		i += pas		
 	return longueur,img
