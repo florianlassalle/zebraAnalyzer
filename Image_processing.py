@@ -49,7 +49,8 @@ class Image_zebra:
 		self.hull = cv2.convexHull(self.contour)
 
 		self.cop, self.courbure,pt1,pt2 = draw_backContour(self.hull,self.cop,self.ellipse,self.contour)
-		#cv2.imshow("img",self.img)
+		#write the name on the image
+		cv2.putText(self.cop,self.name,(10,self.cop.shape[0]-10), cv2.FONT_HERSHEY_SIMPLEX, 2,(255,255,255),2,cv2.CV_AA)
 		# save analyse's results
 		self.write_mesures(self.courbure,self.name,self.area)
 		#cv2.imshow(self.name,self.cop)
