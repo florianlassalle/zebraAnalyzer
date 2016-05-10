@@ -10,7 +10,7 @@ class Widget(QWidget):
         #Container Widget       
         self.widget = QWidget()
         #Layout of Container Widget
-        self.layout = QGridLayout(self)
+        self.layout = QGridLayout()
 	self.widget.setLayout(self.layout)
     
         
@@ -23,7 +23,7 @@ class Widget(QWidget):
         self.scroll.setWidget(self.widget)
 
         #Scroll Area Layer add
-        self.vLayout = QGridLayout(self)
+        self.vLayout = QGridLayout()
 
         self.vLayout.addWidget(self.scroll)
         self.setLayout(self.vLayout)

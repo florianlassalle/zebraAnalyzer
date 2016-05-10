@@ -3,12 +3,12 @@
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-import Image_processing as imp
+import Image_Zebra as imp
 import widget as wg
 
-class ImageViewer(QMainWindow):
+class Imageloader(QMainWindow):
     def __init__(self):
-        super(ImageViewer, self).__init__()
+        super(Imageloader, self).__init__()
 	self.resultDir = "../Analyze_results/Images/"
 	self.w = wg.Widget()
         self.setCentralWidget(self.w)	
@@ -46,6 +46,6 @@ if __name__ == '__main__':
     import sys
 
     app = QApplication(sys.argv)
-    imageViewer = ImageViewer()
-    imageViewer.show()	
+    imageloader = Imageloader()
+    imageloader.show()	
     sys.exit(app.exec_())

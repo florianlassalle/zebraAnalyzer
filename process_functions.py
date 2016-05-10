@@ -140,7 +140,7 @@ def draw_roundFish(points,img):
 	
 	rapport = calcul_rapport(longueur,maxi)
 
-	return img,rapport,top,bot
+	return img,rapport,top,bot,longueur
 
 def find_bigest(contour,hierarchy):
 		"""
@@ -254,7 +254,7 @@ def draw_longFish(contour,hull,top,bot,img):
 
 	maxi = calcul_distance(hull,bot,top)
 	rapport = calcul_rapport(longueur,maxi)
-	return img,rapport
+	return img,rapport,longueur
 
 def drawing(points,pt1,pt2,pas,maxi,img):
 	"""
@@ -273,27 +273,45 @@ def drawing(points,pt1,pt2,pas,maxi,img):
 		i += pas		
 	return longueur,img
 
-def draw_backContour(hull,img,ellipse,contour):
+def detect_type(ellipse):
 	"""
 	Fonction qui permet de decider si on a un poisson de type long ou rond.
 	Cela se fait en calculant le rapport de la largeur sur la longueur de l'ellipse
 	obtenue avec fitEllipse.
-	elle va ensuite lancer en fonction, soit la fonction draw_longFish, soit draw_roundfsh.
 	"""
-
 	ovality = calc_ellipse(ellipse)
 	if ovality < 0.5:
-		pt1,pt2 = find_longest(hull)
-		img_out,courbure = draw_longFish(contour,hull,pt1,pt2,img)
-		img_out = detect_yolk(img_out,img, 250, 100)
+		fish_type = "long"
 	else :
-		img_out,courbure,pt1,pt2 = draw_roundFish(hull,img)
-		img_out = detect_yolk(img_out,img,400,60)
-	return img_out, courbure,pt1,pt2
+		fish_type = "round"
+	return fish_type
+
+def draw_backContour(hull,img,contour,fish_type):
+	"""
+	Cette fonction permet de lancer les fonctions de dessin du contour en fonction du tyupe de poisson
+	"""
+
+	if fish_type == "long":
+		pt1,pt2 = find_longest(hull)
+		img_out,courbure,longueur = draw_longFish(contour,hull,pt1,pt2,img)
+	else :
+		img_out,courbure,pt1,pt2,longueur = draw_roundFish(hull,img)
+	return img_out, courbure,pt1,pt2,longueur
 
 def calc_ellipse(ellipse):
 	rapport = ellipse[1][0]/ellipse[1][1]
 	return rapport
+
+def detect_yolk_launcher(img,img_out,fish_type):
+	"""
+	Cette fonction permet de lancer les fonctions de dessin du contour en fonction du tyupe de poisson
+	"""
+
+	if fish_type == "long":
+		img_out = detect_yolk(img,img_out, 250, 100)
+	else :
+		img_out = detect_yolk(img,img_out,400,60)
+	return img_out
 
 def detect_yolk(img,img_out, par1, par2):
 
@@ -314,32 +332,6 @@ def detect_yolk(img,img_out, par1, par2):
 	cimg = cv2.cvtColor(cimg, cv2.COLOR_BGR2GRAY)
 
 	circles = cv2.HoughCircles(cimg,cv2.cv.CV_HOUGH_GRADIENT,1,par1,param1=par2,param2=30,minRadius=5,maxRadius=1000)
-
-
-	"""
-	parametre detection de loeil:
-
-	(img,cv2.cv.CV_HOUGH_GRADIENT,1,40,param1=50,param2=30,minRadius=10,maxRadius=55)
-
-	exception
-	z05/z10 : (img,cv2.cv.CV_HOUGH_GRADIENT,2,500,param1=50,param2=30,minRadius=10,maxRadius=55)
-
-	fonctionne pas:
-	z07 (img,cv2.cv.CV_HOUGH_GRADIENT,2,300,param1=20,param2=98,minRadius=5,maxRadius=60)
-	z08a
-
-	"""
-
-	"""
-	parametre detection du yolk:
-
-	#parametre pour les poissons long img,cv2.cv.CV_HOUGH_GRADIENT,1,250,param1=100,param2=30,minRadius=5,maxRadius=1000)
-
-	#parmetre pour les poissons rond  img,cv2.cv.CV_HOUGH_GRADIENT,1,400,param1=60,param2=30,minRadius=5,maxRadius=1000)
-
-	#exception lorsque le bout du yolk est trop marque 
-	(img,cv2.cv.CV_HOUGH_GRADIENT,100,600,param1=100,param2=30,minRadius=5,maxRadius=1000)
-	"""
 
 
 	circles = np.uint16(np.around(circles))
